@@ -73,7 +73,26 @@ module FCP
 
 	# copy a given array of files to a remote FTP server.
 	def cp_to_ftp(source, target)
-		# TODO
+		@@host, target_dir = extract_host_info(target)
+		target_dir = format_target_dir(target_dir.to_s)
+
+		Net::FTP.open(@@host, @@user, @@password) do |ftp|
+			ftp.login if @@user.nil?
+			source.each do |s|
+				safe_check(target_dir, File.basename(s), ftp) if @@safe
+				if File.directory?(s)
+					if @@recursive
+						write_dir(s, target_dir, ftp)
+					else
+						Logger.err(
+							"'#{s}' is a directory. Use -r to enable recursive copy!")
+						# NOTREACHED
+					end
+				else
+					write_file(s, target_dir + File.basename(s), ftp)
+				end
+			end
+		end
 	end
 
 	private
