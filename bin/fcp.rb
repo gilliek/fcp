@@ -74,6 +74,7 @@ module FCP
 	# copy a given array of files to a remote FTP server.
 	def cp_to_ftp(source, target)
 		@@host, target_dir = extract_host_info(target)
+		apply_config
 		target_dir = format_target_dir(target_dir.to_s)
 
 		Net::FTP.open(@@host, @@user, @@password) do |ftp|
