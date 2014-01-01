@@ -77,6 +77,64 @@ module FCP
 	end
 end
 
-begin
+require 'optparse'
+include FCP
 
+begin
+	# TODO improve help
+	opts = OptionParser.new do |o|
+		o.banner = "usage: #{File.basename($0)} [options] [source files] [target]\n"
+		o.separator(nil)
+		o.separator("options:")
+		o.on("-a", "--anonymous", "anonymous login (without credentials)") do
+			FCP::anonymous = true # enable anonymous login
+		end
+		o.on("-c", "--config CONFIG_FILE", String, "specific config file") do |c|
+			FCP::config = [c, FCP::DEFAULT_CONFIG_PATH].flatten
+		end
+		o.on("-h", "--help", "show this help") { puts o; exit }
+		o.on("-m", "--mode MODE", String, "copy mode (bin or ascii)") do |m|
+			if m == "bin"
+				FCP.mode = FCP.MODE_BIN
+			elsif m == "ascii"
+				FCP.mode = FCP.MODE_ASCII
+			else
+				Logger.err("Mode '#{m}' does not exist! Please choose either 'bin' " +
+										 "or 'ascii'!")
+				# NOTREACHED
+			end
+		end
+		o.on("-p", "--password PASSWORD", String, "password used to log in") do |p|
+			FCP::password = p
+		end
+		o.on("-P", "--port PORT", Integer, "FTP port (default: 21)") do |p|
+			FCP::port = p.to_s
+		end
+		o.on("-u", "--user USER", String, "user used to log in") do |u|
+			FCP::user = u
+		end
+		o.on("-r", "--recursive", "copy directories recursively") do
+			FCP::recursive = true # enable recursive copy
+		end
+		o.on("-s", "--safe", "safe mode (ask the user before overwriting file)") do
+			FCP::safe = true # enable safe mode
+		end
+		o.on("-v", "--verbose", "enable verbose mode") { Logger.enable_verbose }
+	end
+	opts.parse!
+
+	if ARGV.length < 2
+		Logger.err("Invalid # of arguments ! You have to specify at least a " +
+		             "source and a target !")
+		# NOTREACHED
+	end
+
+	source = ARGV[0..ARGV.length-2]
+	target = ARGV[ARGV.length-1]
+
+	# empty stdin buffer
+	while !ARGV.pop.nil? ; end
+
+	# XXX 
+	FCP.cp_to_ftp(source, target)
 end
