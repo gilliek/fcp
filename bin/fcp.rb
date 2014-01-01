@@ -75,6 +75,60 @@ module FCP
 	def cp_to_ftp(source, target)
 		# TODO
 	end
+
+	private
+		# recursively write a directory and its subdirectories
+		def write_dir(source, target, ftp)
+			ftp.mkdir(target + "/" + source)
+
+			Dir[source + "/**/*"].each do |f|
+				if File.directory?(f)
+					write_dir(f, target, ftp)
+				else
+					write_file(f, target + f, ftp)
+				end
+			end
+		end
+
+		def write_file(source, target, ftp)
+			if @@mode == MODE_ASCII
+				ftp.puttextfile(source, target)
+			else # @@mode == MODE_BIN
+				ftp.putbinaryfile(source, target)
+			end
+		end
+
+		def yesno(prompt="")
+			print "#{prompt} (y/n) "
+			answ = gets.sub("\n", "")
+			return answ == "y"
+		end
+
+		def safe_check(target_dir, filename, ftp)
+			ftp.ls(target_dir).each do |line|
+				tmp  = line.split(" ")
+				curr = tmp[tmp.length-1]
+
+				if curr == filename
+					if !yesno("'#{curr}' already exists. Would you like to overwrite it ?")
+						ftp.close
+						exit 0
+					else
+						return
+					end
+				end
+			end
+		end
+
+		def format_target_dir(target_dir="")
+			@@dir     += "/" if !@@dir.empty? && @@dir[@@dir.length-1] != "/"
+			target_dir = @@dir + target_dir
+		end
+
+		def extract_host_info(url)
+			matches = url.scan(/ftp:\/\/([\w\-.]+):(.*)/)
+			return matches[0][0], matches[0][1] # host, target_dir
+		end
 end
 
 require 'optparse'
