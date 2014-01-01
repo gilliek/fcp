@@ -148,6 +148,57 @@ module FCP
 			matches = url.scan(/ftp:\/\/([\w\-.]+):(.*)/)
 			return matches[0][0], matches[0][1] # host, target_dir
 		end
+
+		def apply_config
+			config_hash = parse_config_file
+			config      = config_hash[@@host] if !config_hash.nil?
+			return if config.nil?
+
+			# apply config if params are not overrided by program options
+			@@host      = config["hostname"] if !config["hostname"].nil?
+			@@user      = config["user"] if @@user.nil? && !config["user"].nil?
+			@@password  = config["password"] if @@password.nil? && !config["password"].nil?
+			@@port      = config["port"] if @@port == DEFAULT_PORT && !config["port"].nil?
+			@@anonymous = config["auth"] == "anonymous" if !config["auth"].nil?
+			@@dir       = config["directory"] if !config["directory"].nil?
+			@@safe      = config["safemode"] == "yes" if !config["safemode"].nil?
+		end
+
+		def parse_config_file
+			f      = nil
+			config = Hash.new
+
+			@@config.each do |path|
+					if File.exists?(path)
+						f = File.open(path)
+						break
+					end
+			end
+
+			if f == nil
+				Logger.verbose("Cannot find configuration file!")
+				return
+			end
+
+			current_host = nil
+			f.readlines.each do |line|
+				next if line == "\n" || line[0] == "#" # skip empty lines or comment
+				if line =~ /^(\t| +)/
+					# TODO raise an exception if current_host.nil?
+					matches = line.scan(/(\w+) +(.+)\n$/) # key value
+					# TODO raise an exception if matches.length != 2
+					config[current_host][matches[0][0].downcase] = matches[0][1]
+				else
+					matches = line.scan(/^Host (\w+)\n/i)
+					# TODO raise an exception if matches.length != 1
+					current_host         = matches[0][0]
+					config[current_host] = Hash.new
+				end
+			end
+
+			f.close
+			return config
+		end
 end
 
 require 'optparse'
