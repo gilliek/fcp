@@ -19,6 +19,9 @@
 		BSD 3-clauses (see LICENSE file)
 =end
 
+require 'net/ftp'
+require 'optparse'
+
 class Logger
 	@@verbose_enabled = false
 
@@ -35,37 +38,29 @@ class Logger
 	end
 end
 
-module FCP
-	require 'net/ftp'
-
-	MODE_ASCII = 0 # ASCII copy
-	MODE_BIN   = 1 # Binary copy
-
+class FCP
+	MODE_ASCII          = 0 # ASCII copy
+	MODE_BIN            = 1 # Binary copy
 	DEFAULT_CONFIG_PATH = [ENV["HOME"] + "/.config/ftpconfig",
 												 ENV["HOME"] + "/.ftpconfig"]
 	DEFAULT_PORT        = "21"
 
-	# copy options
-	@@host      = nil                  # FTP host. Must contain protocol (ftp://)
-	@@user      = nil                  # user if login mode is not anonymous
-	@@password  = nil                  # password if login mode is not anonymous
-	@@port      = DEFAULT_PORT         # FTP port
-	@@recursive = false                # for copying directories
-	@@anonymous = false                # false if credentials are needed
-	@@mode      = MODE_BIN             # transfer mode: ASCII or binary
-	@@config    = DEFAULT_CONFIG_PATH  # list of possible path for config file
-	@@dir       = ""                   # default remote directory
-	@@safe      = false                # Safe mode (ask before overwriting).
+	attr_accessor :host      # FTP host. Must contain protocol (ftp://)
+	attr_accessor :user      # user if login mode is not anonymous
+	attr_accessor :password  # password if login mode is not anonymous
+	attr_accessor :port      # FTP port
+	attr_accessor :recursive # for copying directories
+	attr_accessor :anonymous # false if credentials are needed
+	attr_accessor :mode      # transfer mode: ASCII or binary
+	attr_accessor :config    # list of possible path for config file
+	attr_accessor :dir       # default remote directory
+	attr_accessor :safe      # Safe mode (ask before overwriting).
 
-	# accessors
-	def user=(value)      ; @@user = value      ; end
-	def password=(value)  ; @@password = value  ; end
-	def port=(value)      ; @@port = value      ; end
-	def recursive=(value) ; @@recursive = value ; end
-	def anonymous=(value) ; @@anonymous = value ; end
-	def mode=(value)      ; @@mode = value      ; end
-	def config=(value)    ; @@config = value    ; end
-	def safe=(value)      ; @@safe = value      ; end
+	def initialize
+		@port, @mode, @config = DEFAULT_PORT, MODE_BIN, DEFAULT_CONFIG_PATH
+		@recursive, @anonymous, @safe = false, false, false
+		@dir = ""
+	end
 
 	def cp_from_ftp(source, target)
 		# TODO
@@ -73,16 +68,17 @@ module FCP
 
 	# copy a given array of files to a remote FTP server.
 	def cp_to_ftp(source, target)
-		@@host, target_dir = extract_host_info(target)
+		@host, target_dir = extract_host_info(target)
 		apply_config
+		change_default_port
 		target_dir = format_target_dir(target_dir.to_s)
 
-		Net::FTP.open(@@host, @@user, @@password) do |ftp|
-			ftp.login if @@user.nil?
+		Net::FTP.open(@host, @user, @password) do |ftp|
+			ftp.login if @user.nil?
 			source.each do |s|
-				safe_check(target_dir, File.basename(s), ftp) if @@safe
+				safe_check(target_dir, File.basename(s), ftp) if @safe
 				if File.directory?(s)
-					if @@recursive
+					if @recursive
 						write_dir(s, target_dir, ftp)
 					else
 						Logger.err(
@@ -97,6 +93,14 @@ module FCP
 	end
 
 	private
+		# soooo ugly :(
+		def change_default_port
+			if @port != DEFAULT_PORT
+				Net::FTP.send(:remove_const, :FTP_PORT)
+				Net::FTP.const_set(:FTP_PORT, @port)
+			end
+		end
+
 		# recursively write a directory and its subdirectories
 		def write_dir(source, target, ftp)
 			ftp.mkdir(target + "/" + source)
@@ -111,9 +115,9 @@ module FCP
 		end
 
 		def write_file(source, target, ftp)
-			if @@mode == MODE_ASCII
+			if @mode == MODE_ASCII
 				ftp.puttextfile(source, target)
-			else # @@mode == MODE_BIN
+			else # @mode == MODE_BIN
 				ftp.putbinaryfile(source, target)
 			end
 		end
@@ -121,6 +125,7 @@ module FCP
 		def yesno(prompt="")
 			print "#{prompt} (y/n) "
 			answ = gets.sub("\n", "")
+			print "foo" # XXX
 			return answ == "y"
 		end
 
@@ -141,8 +146,8 @@ module FCP
 		end
 
 		def format_target_dir(target_dir="")
-			@@dir     += "/" if !@@dir.empty? && @@dir[@@dir.length-1] != "/"
-			target_dir = @@dir + target_dir
+			@dir      += "/" if !@dir.empty? && @dir[@dir.length-1] != "/"
+			target_dir = @dir + target_dir
 		end
 
 		def extract_host_info(url)
@@ -152,24 +157,24 @@ module FCP
 
 		def apply_config
 			config_hash = parse_config_file
-			config      = config_hash[@@host] if !config_hash.nil?
+			config      = config_hash[@host] if !config_hash.nil?
 			return if config.nil?
 
 			# apply config if params are not overrided by program options
-			@@host      = config["hostname"] if !config["hostname"].nil?
-			@@user      = config["user"] if @@user.nil? && !config["user"].nil?
-			@@password  = config["password"] if @@password.nil? && !config["password"].nil?
-			@@port      = config["port"] if @@port == DEFAULT_PORT && !config["port"].nil?
-			@@anonymous = config["auth"] == "anonymous" if !config["auth"].nil?
-			@@dir       = config["directory"] if !config["directory"].nil?
-			@@safe      = config["safemode"] == "yes" if !config["safemode"].nil?
+			@host      = config["hostname"] if !config["hostname"].nil?
+			@user      = config["user"] if @user.nil? && !config["user"].nil?
+			@password  = config["password"] if @password.nil? && !config["password"].nil?
+			@port      = config["port"] if @port == DEFAULT_PORT && !config["port"].nil?
+			@anonymous = config["auth"] == "anonymous" if !config["auth"].nil?
+			@dir       = config["directory"] if !config["directory"].nil?
+			@safe      = config["safemode"] == "yes" if !config["safemode"].nil?
 		end
 
 		def parse_config_file
 			f      = nil
 			config = Hash.new
 
-			@@config.each do |path|
+			@config.each do |path|
 					if File.exists?(path)
 						f = File.open(path)
 						break
@@ -202,27 +207,26 @@ module FCP
 		end
 end
 
-require 'optparse'
-include FCP
-
 begin
+	fcp = FCP.new
+
 	# TODO improve help
 	opts = OptionParser.new do |o|
 		o.banner = "usage: #{File.basename($0)} [options] [source files] [target]\n"
 		o.separator(nil)
 		o.separator("options:")
 		o.on("-a", "--anonymous", "anonymous login (without credentials)") do
-			FCP::anonymous = true # enable anonymous login
+			fcp.anonymous = true # enable anonymous login
 		end
 		o.on("-c", "--config CONFIG_FILE", String, "specific config file") do |c|
-			FCP::config = [c, FCP::DEFAULT_CONFIG_PATH].flatten
+			fcp.config = [c, FCP::DEFAULT_CONFIG_PATH].flatten
 		end
 		o.on("-h", "--help", "show this help") { puts o; exit }
 		o.on("-m", "--mode MODE", String, "copy mode (bin or ascii)") do |m|
 			if m == "bin"
-				FCP.mode = FCP.MODE_BIN
+				fcp.mode = FCP.MODE_BIN
 			elsif m == "ascii"
-				FCP.mode = FCP.MODE_ASCII
+				fcp.mode = FCP.MODE_ASCII
 			else
 				Logger.err("Mode '#{m}' does not exist! Please choose either 'bin' " +
 										 "or 'ascii'!")
@@ -230,19 +234,19 @@ begin
 			end
 		end
 		o.on("-p", "--password PASSWORD", String, "password used to log in") do |p|
-			FCP::password = p
+			fcp.password = p
 		end
 		o.on("-P", "--port PORT", Integer, "FTP port (default: 21)") do |p|
-			FCP::port = p.to_s
+			fcp.port = p.to_s
 		end
 		o.on("-u", "--user USER", String, "user used to log in") do |u|
-			FCP::user = u
+			fcp.user = u
 		end
 		o.on("-r", "--recursive", "copy directories recursively") do
-			FCP::recursive = true # enable recursive copy
+			fcp.recursive = true # enable recursive copy
 		end
 		o.on("-s", "--safe", "safe mode (ask the user before overwriting file)") do
-			FCP::safe = true # enable safe mode
+			fcp.safe = true # enable safe mode
 		end
 		o.on("-v", "--verbose", "enable verbose mode") { Logger.enable_verbose }
 	end
@@ -261,5 +265,5 @@ begin
 	while !ARGV.pop.nil? ; end
 
 	# XXX 
-	FCP.cp_to_ftp(source, target)
+	fcp.cp_to_ftp(source, target)
 end
