@@ -48,7 +48,9 @@ class MockFTPServer
 	end
 
 	# LIST [path]
-	def cmd_list(args=[]) ; end
+	def cmd_list(args=[])
+		template = "-rw-r--r--\t1 ftp\tftp\t42 Jul 6 21:02 %s"
+	end
 
 	# PORT [port]
 	def cmd_port(args=[])
@@ -71,7 +73,7 @@ class MockFTPServer
 
 		# save data to a new file
 		file = File.open(args[0], "w")
-		file.write(data)
+		file.write(data) # FIXME problem with a missing "\n" for ASCII file
 		file.close
 		@data_conn.close
 
