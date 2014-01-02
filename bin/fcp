@@ -125,7 +125,6 @@ class FCP
 		def yesno(prompt="")
 			print "#{prompt} (y/n) "
 			answ = gets.sub("\n", "")
-			print "foo" # XXX
 			return answ == "y"
 		end
 
@@ -171,8 +170,8 @@ class FCP
 		end
 
 		def parse_config_file
-			f      = nil
-			config = Hash.new
+			f    = nil
+			conf = Hash.new
 
 			@config.each do |path|
 					if File.exists?(path)
@@ -193,17 +192,17 @@ class FCP
 					# TODO raise an exception if current_host.nil?
 					matches = line.scan(/(\w+) +(.+)\n$/) # key value
 					# TODO raise an exception if matches.length != 2
-					config[current_host][matches[0][0].downcase] = matches[0][1]
+					conf[current_host][matches[0][0].downcase] = matches[0][1]
 				else
 					matches = line.scan(/^Host (\w+)\n/i)
 					# TODO raise an exception if matches.length != 1
 					current_host         = matches[0][0]
-					config[current_host] = Hash.new
+					conf[current_host] = Hash.new
 				end
 			end
 
 			f.close
-			return config
+			return conf
 		end
 end
 
