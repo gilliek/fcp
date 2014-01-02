@@ -223,9 +223,9 @@ begin
 		o.on("-h", "--help", "show this help") { puts o; exit }
 		o.on("-m", "--mode MODE", String, "copy mode (bin or ascii)") do |m|
 			if m == "bin"
-				fcp.mode = FCP.MODE_BIN
+				fcp.mode = FCP::MODE_BIN
 			elsif m == "ascii"
-				fcp.mode = FCP.MODE_ASCII
+				fcp.mode = FCP::MODE_ASCII
 			else
 				Logger.err("Mode '#{m}' does not exist! Please choose either 'bin' " +
 										 "or 'ascii'!")
