@@ -4,6 +4,7 @@ require "./test_utils"
 
 require "test/unit"
 require "net/ftp"
+require "digest/md5"
 
 class TestMockFTPServer < Test::Unit::TestCase
 	include TestUtils
@@ -36,6 +37,7 @@ class TestMockFTPServer < Test::Unit::TestCase
 	def test_all
 		test_cmd_list
 		test_cmd_mkd
+		test_cmd_stor
 	end
 
 	private
@@ -67,5 +69,23 @@ class TestMockFTPServer < Test::Unit::TestCase
 			@ftp.mkdir(folder)
 			assert(File.exists?(folder))
 			assert(File.directory?(folder))
+		end
+
+		def test_cmd_stor
+			filepath        = "tmp_client/file_to_store"
+			remote_filepath = "tmp_server/" + File.basename(filepath)
+
+			create_file(filepath)
+
+			@ftp.puttextfile(filepath, remote_filepath)
+
+			assert(File.exists?(remote_filepath))
+
+			source_content = File.open(filepath).readlines.join
+			target_content = File.open(remote_filepath).readlines.join
+
+			assert_equal(
+				Digest::MD5.digest(source_content),
+				Digest::MD5.digest(target_content))
 		end
 end
