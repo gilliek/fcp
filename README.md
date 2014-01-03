@@ -17,3 +17,4 @@ See `fcp -h` or `fcp --help`
 # Tests
 
 To run the test suite, use `rake test` from the root of the project.
+
