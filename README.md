@@ -5,6 +5,10 @@
 FCP stands for FTP Copy. It aims to be a simple CLI tool that performs copy
 through FTP.
 
+# Features
+
+TODO
+
 # Installation
 
 Copy `bin/fcp` into one of your bin folder (eg. `/usr/bin`, `/usr/local/bin`,
