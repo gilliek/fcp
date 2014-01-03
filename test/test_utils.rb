@@ -8,7 +8,7 @@ module TestUtils
 	end
 
 	def clear_tmp
-		Dir["./tmp_server/*", "./tmp_client/*"].each do |f|
+		Dir["./test/tmp_server/*", "./test/tmp_client/*"].each do |f|
 			FileUtils.rm_r(f)
 		end
 	end
