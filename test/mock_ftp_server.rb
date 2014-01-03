@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'socket'
 
 class MockFTPServer
@@ -105,10 +103,4 @@ class MockFTPServer
 		@type = args[0]
 		@client.sendmsg "200\r\n" # => TYPE set
 	end
-end
-
-# TODO only for debugging the mock
-begin
-	m = MockFTPServer.new
-	m.start
 end
