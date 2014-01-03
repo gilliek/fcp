@@ -12,7 +12,7 @@ or `~/.bin`). Make sure that the path is in your `$PATH`.
 
 # Usage (TODO)
 
-See `fcp -h`
+See `fcp -h` or `fcp --help`
 
 # Tests
 
