@@ -49,7 +49,21 @@ class MockFTPServer
 
 	# LIST [path]
 	def cmd_list(args=[])
-		template = "-rw-r--r--\t1 ftp\tftp\t42 Jul 6 21:02 %s"
+		path, len = args[0], args[0].length
+		path += "/" if path[len-1] != "/" && path[len-1] != "*"
+		path += "*" if path[len-1] != "*"
+
+		# we actually only care about the file name
+		tmpl = "-rw-r--r--\t1 ftp\tftp\t42 Jul 6 21:02 %s"
+
+		# we assume that the data socket connection is already established
+		@client.sendmsg "150\r\n" # => ready for the transfer
+
+		files = Dir.glob(path).map { |f| sprintf(tmpl, File.basename(f)) }
+		@data_conn.write(files.join("\n"))
+		@data_conn.close
+
+		@client.sendmsg "226\r\n" # => download finished
 	end
 
 	# PORT [port]
