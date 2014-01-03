@@ -97,6 +97,7 @@ class MockFTPServer
 		@client.sendmsg "150\r\n" # => ready for the transfer
 
 		data = @data_conn.read(nil).chomp
+		data += "\n" unless data === Integer
 
 		# save data to a new file
 		file = File.open(args[0], "w")
