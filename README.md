@@ -1,5 +1,6 @@
-**Notice:** FCP is still in development and may contain some bugs.
 [![Build Status](https://travis-ci.org/gilliek/fcp.png?branch=master)](https://travis-ci.org/gilliek/fcp)
+
+**Notice:** FCP is still in development and may contain some bugs.
 
 # FCP
 
