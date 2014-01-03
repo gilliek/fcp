@@ -20,18 +20,27 @@ class MockFTPServer
 	# start the FTP server
 	def start
 		loop do
-			@client = @server.accept          # Wait for a client to connect
+			@client = @server.accept         # Wait for a client to connect
 			@client.sendmsg "220 ready\r\n"  # 220 - the server is ready
 
 			# authentication (we assume that the client does this correctly)
 			@user = @client.gets.gsub("\r\n", "") # => USER
-			@client.sendmsg "331\r\n"            # => USER ok
+			@client.sendmsg "331\r\n"             # => USER ok
 
 			@pass = @client.gets.gsub("\r\n", "") # => PASS
-			@client.sendmsg "230\r\n"            # => PASS ok
+			@client.sendmsg "230\r\n"             # => PASS ok
 
 			while req = @client.gets
 				req.gsub!("\r\n", "")
+
+				# XXX not really needed since no QUIT signal is sent by FCP
+				if req == "QUIT"
+					@client.sendmsg "221\r\n" # => QUIT ok, bye!
+					@client.close
+					@client = nil
+					break
+				end
+
 				tmp  = req.split(" ")
 				cmd, args  = tmp[0], tmp[1..tmp.length-1]
 
