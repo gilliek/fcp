@@ -10,9 +10,9 @@ through FTP.
 Copy `bin/fcp` into one of your bin folder (eg. `/usr/bin`, `/usr/local/bin`,
 or `~/.bin`). Make sure that the path is in your `$PATH`.
 
-# Usage
+# Usage (TODO)
 
-TODO
+See `fcp -h`
 
 # Tests
 
