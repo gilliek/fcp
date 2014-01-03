@@ -3,7 +3,7 @@
 require 'socket'
 
 class MockFTPServer
-	SUPPORTED_CMD = ["LIST", "PORT", "RETR", "STOR", "TYPE"]
+	SUPPORTED_CMD = ["LIST", "MKD", "PORT", "RETR", "STOR", "TYPE"]
 
 	attr_reader :port # server port
 	attr_reader :user # FTP user
@@ -64,6 +64,12 @@ class MockFTPServer
 		@data_conn.close
 
 		@client.sendmsg "226\r\n" # => download finished
+	end
+
+	# MKD [path]
+	def cmd_mkd(args=[])
+		Dir.mkdir(args[0])
+		@client.sendmsg "257\r\n" # => MKD ok
 	end
 
 	# PORT [port]
