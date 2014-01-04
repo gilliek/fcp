@@ -27,6 +27,7 @@ class TestFCP < Test::Unit::TestCase
 
 	def test_all
 		test_simple_upload
+		test_config
 	end
 
 	private
@@ -43,8 +44,26 @@ class TestFCP < Test::Unit::TestCase
 
 			create_file(file)
 
-			io     = IO::popen("#{cmd} #{file} ftp://localhost:#{remote_dir}")
-			puts "#{cmd} #{file} ftp://localhost:#{remote_dir}"
+			test_copy_helper("#{cmd} #{file} ftp://localhost:#{remote_dir}",
+				file, remote_file)
+		end
+
+		# fcp -c test/ftpconfig test/tmp_client/bar ftp://local:
+		# test:
+		#		- copy using config file settings
+		def test_config
+			cmd         = "./bin/fcp -c test/ftpconfig"
+			file        = "test/tmp_client/bar"
+			remote_dir  = "test/tmp_server/"
+			remote_file = remote_dir + "/" + File.basename(file)
+
+			create_file(file)
+
+			test_copy_helper("#{cmd} #{file} ftp://local:", file, remote_file)
+		end
+
+		def test_copy_helper(cmd, file, remote_file)
+			io     = IO::popen(cmd)
 			output = io.readlines.join
 
 			assert(output.empty?)
