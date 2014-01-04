@@ -14,7 +14,6 @@ class TestMockFTPServer < Test::Unit::TestCase
 	def setup
 		@ftp_server    = MockFTPServer.new(MOCK_FTP_PORT)
 		@server_thread = Thread.new { @ftp_server.start }
-		@files         = []
 
 		# dirty hack to change the FTP port
 		Net::FTP.send(:remove_const, :FTP_PORT)
