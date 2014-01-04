@@ -48,11 +48,11 @@ class TestFCP < Test::Unit::TestCase
 				file, remote_file)
 		end
 
-		# fcp -c test/ftpconfig test/tmp_client/bar ftp://local:
+		# fcp -c test/fcpconfig test/tmp_client/bar ftp://local:
 		# test:
 		#		- copy using config file settings
 		def test_config
-			cmd         = "./bin/fcp -c test/ftpconfig"
+			cmd         = "./bin/fcp -c test/fcpconfig"
 			file        = "test/tmp_client/bar"
 			remote_dir  = "test/tmp_server/"
 			remote_file = remote_dir + "/" + File.basename(file)
@@ -62,11 +62,11 @@ class TestFCP < Test::Unit::TestCase
 			test_copy_helper("#{cmd} #{file} ftp://local:", file, remote_file)
 		end
 
-		# fcp -c test/ftpconfig test/tmp_client/bar ftp://local:
+		# fcp -c test/fcpconfig test/tmp_client/bar ftp://local:
 		# test:
 		#		- recursive copy
 		def test_recursive_copy
-			cmd          = "./bin/fcp -c test/ftpconfig -r"
+			cmd          = "./bin/fcp -c test/fcpconfig -r"
 			dir          = "test/tmp_client/plop"
 			remote_dir   = "test/tmp_server/plop"
 			file1        = dir + "/foobar1"
