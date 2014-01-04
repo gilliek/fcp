@@ -103,13 +103,16 @@ class FCP
 
 		# recursively write a directory and its subdirectories
 		def write_dir(source, target, ftp)
-			ftp.mkdir(target + "/" + source)
+			# TODO clean this part !
+			src_dir = File.basename(source) + "/"
+			sep     = target[target.length-1] != "/" ? "/" : ""
+			ftp.mkdir(target + sep + File.basename(source))
 
 			Dir[source + "/**/*"].each do |f|
 				if File.directory?(f)
 					write_dir(f, target, ftp)
 				else
-					write_file(f, target + f, ftp)
+					write_file(f, target + src_dir + File.basename(f), ftp)
 				end
 			end
 		end
