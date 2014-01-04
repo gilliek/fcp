@@ -25,9 +25,13 @@ class TestFCP < Test::Unit::TestCase
 		clear_tmp
 	end
 
+	# Since the class is re-instanciated for each test, we have to
+	# wrap them all into this method in order to avoid problem with
+	# the mock server.
 	def test_all
 		test_simple_upload
 		test_config
+		test_recursive_copy
 	end
 
 	private
@@ -60,6 +64,13 @@ class TestFCP < Test::Unit::TestCase
 			create_file(file)
 
 			test_copy_helper("#{cmd} #{file} ftp://local:", file, remote_file)
+		end
+
+		# fcp -c test/ftpconfig test/tmp_client/bar ftp://local:
+		# test:
+		#		- recursive copy
+		def test_recursive_copy
+
 		end
 
 		def test_copy_helper(cmd, file, remote_file)
