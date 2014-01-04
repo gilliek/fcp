@@ -9,7 +9,7 @@ require "digest/md5"
 class TestMockFTPServer < Test::Unit::TestCase
 	include TestUtils
 
-	MOCK_FTP_PORT = 9999
+	MOCK_FTP_PORT = 10000
 
 	def setup
 		@ftp_server    = MockFTPServer.new(MOCK_FTP_PORT)
