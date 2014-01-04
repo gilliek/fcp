@@ -1,8 +1,6 @@
 
 [![Build Status](https://travis-ci.org/gilliek/fcp.png?branch=master)](https://travis-ci.org/gilliek/fcp)
 
-**Notice:** FCP is still in development and may contain some bugs.
-
 ## FCP
 
 FCP stands for FTP Copy. It aims to be a simple CLI tool that performs copy
