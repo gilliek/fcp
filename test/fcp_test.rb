@@ -14,10 +14,6 @@ class TestFCP < Test::Unit::TestCase
 	def setup
 		@ftp_server    = MockFTPServer.new(MOCK_FTP_PORT)
 		@server_thread = Thread.new { @ftp_server.start }
-
-		# dirty hack to change the FTP port
-		Net::FTP.send(:remove_const, :FTP_PORT)
-		Net::FTP.const_set(:FTP_PORT, MOCK_FTP_PORT)
 	end
 
 	def teardown
@@ -70,14 +66,35 @@ class TestFCP < Test::Unit::TestCase
 		# test:
 		#		- recursive copy
 		def test_recursive_copy
+			cmd          = "./bin/fcp -c test/ftpconfig -r"
+			dir          = "test/tmp_client/plop"
+			remote_dir   = "test/tmp_server/plop"
+			file1        = dir + "/foobar1"
+			file2        = dir + "/foobar2"
+			remote_file1 = remote_dir + "/" + File.basename(file1)
+			remote_file2 = remote_dir + "/" + File.basename(file2)
 
+			Dir.mkdir(dir)
+			create_file(file1)
+			create_file(file2)
+
+			io = IO::popen("#{cmd} #{dir} ftp://local:")
+
+			assert(io.readlines.join.empty?)
+			assert(File.exists?(remote_dir))
+			assert(File.directory?(remote_dir))
+
+			check_file(file1, remote_file1)
+			check_file(file2, remote_file2)
 		end
 
 		def test_copy_helper(cmd, file, remote_file)
-			io     = IO::popen(cmd)
-			output = io.readlines.join
+			io = IO::popen(cmd)
+			assert(io.readlines.join.empty?)
+			check_file(file, remote_file)
+		end
 
-			assert(output.empty?)
+		def check_file(file, remote_file)
 			assert(File.exists?(remote_file))
 			assert(File.file?(remote_file))
 
