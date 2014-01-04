@@ -10,7 +10,15 @@ through FTP.
 
 ## Features
 
-TODO
+- ☑ Copy through FTP
+- ☑ Recursive copy
+- ☑ Configuration file
+- ☑ Transfer in ASCII and Binary mode
+- ☑ Safe copy option (ask before overwriting)
+- ☐ FTPs support
+- ☐ Progressbar option
+- ☐ Verbose mode
+- ☐ Interactively ask for user and password when they are not supplied
 
 ## Installation
 
