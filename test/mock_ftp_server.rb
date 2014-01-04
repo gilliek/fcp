@@ -92,7 +92,6 @@ class MockFTPServer
 
 	# STOR [path]
 	def cmd_stor(args=[])
-		puts args
 		# we assume that the data socket connection is already established
 		@client.sendmsg "150\r\n" # => ready for the transfer
 
