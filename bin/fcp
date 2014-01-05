@@ -76,7 +76,6 @@ class FCP
 		Net::FTP.open(@host, @user, @password) do |ftp|
 			ftp.login if @user.nil?
 			source.each do |s|
-				safe_check(target_dir, File.basename(s), ftp) if @safe
 				if File.directory?(s)
 					if @recursive
 						write_dir(s, target_dir, ftp)
@@ -118,6 +117,8 @@ class FCP
 		end
 
 		def write_file(source, target, ftp)
+			safe_check(target, ftp) if @safe
+
 			if @mode == MODE_ASCII
 				ftp.puttextfile(source, target)
 			else # @mode == MODE_BIN
@@ -128,17 +129,21 @@ class FCP
 		def format_target(source, target_dir, ftp)
 			return File.basename(source) if target_dir.empty?
 
+			if target_dir[target_dir.length-1] == "/"
+				return target_dir + "/" + File.basename(source)
+			end
+
 			begin
-				ftp.ls(target_dir)
-			rescue Net::FTPTempError
+				list = ftp.ls(target_dir)
+				if list.length == 1
+					tmp = list[0].split(" ")
+					return target_dir if tmp[tmp.length-1] == target_dir
+				end
+			rescue Net::FTPTempError # it's probably a file!
 				return target_dir
 			end
 
-			if target_dir[target_dir.length-1] != "/"
-				return target_dir + "/" + File.basename(source)
-			else
-				return target_dir + File.basename(source)
-			end
+			return target_dir + "/" + File.basename(source)
 		end
 
 		def yesno(prompt="")
@@ -147,19 +152,17 @@ class FCP
 			return answ == "y"
 		end
 
-		def safe_check(target_dir, filename, ftp)
-			ftp.ls(target_dir).each do |line|
-				tmp  = line.split(" ")
-				curr = tmp[tmp.length-1]
-
-				if curr == filename
-					if !yesno("'#{curr}' already exists. Would you like to overwrite it ?")
+		def safe_check(target, ftp)
+			begin
+				if !ftp.ls(target).nil?
+					question = "Would you like to overwrite it ?"
+					if !yesno("'#{File.basename(target)}' already exists. #{question}")
 						ftp.close
 						exit 0
-					else
-						return
 					end
 				end
+			rescue Net::FTPTempError
+				return
 			end
 		end
 
