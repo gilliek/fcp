@@ -86,7 +86,7 @@ class FCP
 						# NOTREACHED
 					end
 				else
-					write_file(s, target_dir + File.basename(s), ftp)
+					write_file(s, format_target(s, target_dir, ftp), ftp)
 				end
 			end
 		end
@@ -122,6 +122,22 @@ class FCP
 				ftp.puttextfile(source, target)
 			else # @mode == MODE_BIN
 				ftp.putbinaryfile(source, target)
+			end
+		end
+
+		def format_target(source, target_dir, ftp)
+			return File.basename(source) if target_dir.empty?
+
+			begin
+				ftp.ls(target_dir)
+			rescue Net::FTPTempError
+				return target_dir
+			end
+
+			if target_dir[target_dir.length-1] != "/"
+				return target_dir + "/" + File.basename(source)
+			else
+				return target_dir + File.basename(source)
 			end
 		end
 
