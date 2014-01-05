@@ -135,7 +135,9 @@ class FCP
 
 			begin
 				list = ftp.ls(target_dir)
-				if list.length == 1
+				if list.nil? || list.empty?
+					return target_dir
+				elsif list.length == 1
 					tmp = list[0].split(" ")
 					return target_dir if tmp[tmp.length-1] == target_dir
 				end
